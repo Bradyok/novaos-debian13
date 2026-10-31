@@ -11,8 +11,11 @@ Not made, endorsed or supported by Rigol. Rigol is named only to say which scope
 this fits, and nothing of Rigol's is in it. Your stock firmware stays on the card.
 Writing to the card is at your own risk, with no warranty: back it up first.
 
-Tested on: a DHO924S (installed on the card, restarted) and an MHO934 (booted from
-RAM, not written to its card). apt was tested on a PC under QEMU, not on a scope.
+What was tested: a DHO924S with this image in recovery, restarted, its card booting our
+own first stage instead of Rigol's loader; the same U-Boot chain booting this Debian from
+RAM on that DHO's earlier build and on an MHO934, whose card was not written. Rigol's
+loader starting this exact image has not been run here (it starts the same r115 U-Boot
+chain in a forum user's own build). apt was tested on a PC under QEMU, not on a scope.
 Nobody has used the touchscreen by hand in these tests, only seen X detect it.
 
 What this is
@@ -36,7 +39,7 @@ NovaOS service, no keys of anyone's.
 One set of files works on both families: DHO800/DHO900 and MHO900 have the same
 RK3399 platform, kernel, 7" 1024x600 touch panel and touch controller.
 
-This build: rigol-debian-20261031-67b643dd0268 (kernel 6.12.115+, release build)
+This build: novaos-debian13-67b643dd0268 (kernel 6.12.115+, release build)
 
 The files
 ---------
@@ -61,12 +64,21 @@ With the boot chain you already run (U-Boot proper in recovery, booting a FIT):
      stock firmware, or on any Linux running there). The data area needs about
      2 GB free for it, and keeps 2 GB for the stock firmware.
   2. Write novaos-debian13-<board>-recovery-chain.img to the recovery partition, or
-     pack novaos-debian13-<board>-boot.img into your own chain image the way the published
-     boot source's install/INSTALLING.txt describes for a kernel you built.
+     pack novaos-debian13-<board>-boot.img into your own chain image the way this release's
+     source bundle's install/INSTALLING.txt describes for a kernel you built.
      From a PC with the card in a reader, or a shell of your own. NovaOS and this
      Debian keep the card's other partitions read-only while they run: there,
      run blockdev --setrw on the recovery partition first.
   3. Restart. The boot chain boots Debian from recovery.
+
+A scope still on stock firmware: the stock U-Boot starts recovery only when the first
+sector of the boot partition is zero. Save boot and recovery
+first, because writing them back is how you return to stock. On the card itself, boot
+starts at byte 0x3C00000 (32 MiB long) and recovery at 0x5C00000 (64 MiB long). Check
+with lsblk that the device you write to really is the card.
+
+Use the image for your board. Never write the dho900 image to an MHO: GPIO1_C2 is the
+DHO's backlight enable and the MHO's clock chip select.
 
 Keep your own copy of the recovery partition before you write it: writing that
 copy back restores what was there.
